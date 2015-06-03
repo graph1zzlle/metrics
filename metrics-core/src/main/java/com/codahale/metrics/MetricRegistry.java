@@ -1,9 +1,11 @@
 package com.codahale.metrics;
 
+import java.lang.Boolean;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.mpierce.metrics.reservoir.hdrhistogram.*;
 
 /**
  * A registry of metric instances.
@@ -105,7 +107,7 @@ public class MetricRegistry implements MetricSet {
     }
 
     /**
-     * Return the {@link Counter} registered under this name; or create and register 
+     * Return the {@link Counter} registered under this name; or create and register
      * a new {@link Counter} if none is registered.
      *
      * @param name the name of the metric
@@ -116,7 +118,7 @@ public class MetricRegistry implements MetricSet {
     }
 
     /**
-     * Return the {@link Histogram} registered under this name; or create and register 
+     * Return the {@link Histogram} registered under this name; or create and register
      * a new {@link Histogram} if none is registered.
      *
      * @param name the name of the metric
@@ -126,8 +128,15 @@ public class MetricRegistry implements MetricSet {
         return getOrAdd(name, MetricBuilder.HISTOGRAMS);
     }
 
+    public Histogram hdrHistogram(String name, Boolean resetOnSnapshot) {
+        MetricBuilder<Histogram> builder = resetOnSnapshot
+                ? MetricBuilder.HISTOGRAM_WITH_RESET_ON_SNAPSHOT_HDR_RESERVOIR
+                : MetricBuilder.HISTOGRAM_WITH_HDR_RESERVOIR;
+        return getOrAdd(name, builder);
+    }
+
     /**
-     * Return the {@link Meter} registered under this name; or create and register 
+     * Return the {@link Meter} registered under this name; or create and register
      * a new {@link Meter} if none is registered.
      *
      * @param name the name of the metric
@@ -138,7 +147,7 @@ public class MetricRegistry implements MetricSet {
     }
 
     /**
-     * Return the {@link Timer} registered under this name; or create and register 
+     * Return the {@link Timer} registered under this name; or create and register
      * a new {@link Timer} if none is registered.
      *
      * @param name the name of the metric
@@ -146,6 +155,13 @@ public class MetricRegistry implements MetricSet {
      */
     public Timer timer(String name) {
         return getOrAdd(name, MetricBuilder.TIMERS);
+    }
+
+    public Timer hdrTimer(String name, Boolean resetOnSnapshot) {
+        MetricBuilder<Timer> builder = resetOnSnapshot
+                ? MetricBuilder.TIMER_WITH_RESET_ON_SNAPSHOT_HDR_RESERVOIR
+                : MetricBuilder.TIMER_WITH_HDR_RESERVOIR;
+        return getOrAdd(name, builder);
     }
 
     /**
@@ -424,6 +440,30 @@ public class MetricRegistry implements MetricSet {
             }
         };
 
+        MetricBuilder<Histogram> HISTOGRAM_WITH_HDR_RESERVOIR = new MetricBuilder<Histogram>() {
+            @Override
+            public Histogram newMetric() {
+                return new Histogram(new HdrHistogramReservoir());
+            }
+
+            @Override
+            public boolean isInstance(Metric metric) {
+                return Histogram.class.isInstance(metric);
+            }
+        };
+
+        MetricBuilder<Histogram> HISTOGRAM_WITH_RESET_ON_SNAPSHOT_HDR_RESERVOIR = new MetricBuilder<Histogram>() {
+            @Override
+            public Histogram newMetric() {
+                return new Histogram(new HdrHistogramResetOnSnapshotReservoir());
+            }
+
+            @Override
+            public boolean isInstance(Metric metric) {
+                return Histogram.class.isInstance(metric);
+            }
+        };
+
         MetricBuilder<Meter> METERS = new MetricBuilder<Meter>() {
             @Override
             public Meter newMetric() {
@@ -440,6 +480,30 @@ public class MetricRegistry implements MetricSet {
             @Override
             public Timer newMetric() {
                 return new Timer();
+            }
+
+            @Override
+            public boolean isInstance(Metric metric) {
+                return Timer.class.isInstance(metric);
+            }
+        };
+
+        MetricBuilder<Timer> TIMER_WITH_HDR_RESERVOIR = new MetricBuilder<Timer>() {
+            @Override
+            public Timer newMetric() {
+                return new Timer(new HdrHistogramReservoir());
+            }
+
+            @Override
+            public boolean isInstance(Metric metric) {
+                return Timer.class.isInstance(metric);
+            }
+        };
+
+        MetricBuilder<Timer> TIMER_WITH_RESET_ON_SNAPSHOT_HDR_RESERVOIR = new MetricBuilder<Timer>() {
+            @Override
+            public Timer newMetric() {
+                return new Timer(new HdrHistogramResetOnSnapshotReservoir());
             }
 
             @Override
