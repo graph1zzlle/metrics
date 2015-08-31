@@ -7,7 +7,7 @@
 
     <groupId>io.dropwizard.metrics</groupId>
     <artifactId>metrics-parent</artifactId>
-    <version>3.1.2</version>
+    <version>3.1.2-teads1</version>
     <packaging>pom</packaging>
     <name>Metrics Parent</name>
     <description>
@@ -93,14 +93,14 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>sonatype-nexus-snapshots</id>
+            <id>deployment</id>
             <name>Sonatype Nexus Snapshots</name>
-            <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+            <url>http://nexus.teads.net/nexus/content/repositories/snapshots/</url>
         </snapshotRepository>
         <repository>
-            <id>sonatype-nexus-staging</id>
+            <id>deployment</id>
             <name>Nexus Release Repository</name>
-            <url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <url>http://nexus.teads.net/nexus/content/repositories/releases/</url>
         </repository>
     </distributionManagement>
 
